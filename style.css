@@ -166,7 +166,7 @@ body {
     color: var(--tg-theme-hint-color, #999999);
     font-style: italic;
     text-align: center;
-    padding: 12px 0 !important;
+    padding: 12px 0px;
 }
 
 /* Модальное окно поиска */
@@ -251,3 +251,4 @@ body {
     color: var(--tg-theme-hint-color, #999999);
     font-style: italic;
 }
+
