@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Трекер КБЖУ</title>
+    <!-- Подключим стили Telegram для красоты -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@telegram-apps/telegram-ui-web@1/dist/css/telegram-ui-web.css">
+    <!-- Наши кастомные стили -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app" id="app">
+        <!-- Шапка -->
+        <header class="header">
+            <button class="icon-button" id="profileButton">
+                <!-- Простая иконка профиля -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 6C13.93 6 15.5 7.57 15.5 9.5C15.5 11.43 13.93 13 12 13C10.07 13 8.5 11.43 8.5 9.5C8.5 7.57 10.07 6 12 6ZM12 20C9.97 20 7.57 19.18 5.86 17.12C7.55 15.8 9.68 15 12 15C14.32 15 16.45 15.8 18.14 17.12C16.43 19.18 14.03 20 12 20Z" fill="currentColor"/>
+                </svg>
+            </button>
+            <h1 class="date-title" id="currentDate">Загрузка...</h1>
+            <!-- Заглушка для выравнивания -->
+            <div class="icon-button placeholder"></div>
+        </header>
+
+        <!-- Основной контент -->
+        <main class="main">
+            <!-- Сводка по КБЖУ -->
+            <section class="summary-card">
+                <h2>Сводка за день</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="caloriesProgress"></div>
+                </div>
+                <p>Калории: <span id="consumedCalories">0</span> / <span id="targetCalories">2000</span> ккал</p>
+                <div class="macros">
+                    <div class="macro-item">
+                        <span class="macro-label">Белки:</span>
+                        <span id="consumedProtein">0</span> / <span id="targetProtein">150</span> г
+                    </div>
+                    <div class="macro-item">
+                        <span class="macro-label">Жиры:</span>
+                        <span id="consumedFat">0</span> / <span id="targetFat">70</span> г
+                    </div>
+                    <div class="macro-item">
+                        <span class="macro-label">Углеводы:</span>
+                        <span id="consumedCarbs">0</span> / <span id="targetCarbs">250</span> г
+                    </div>
+                </div>
+            </section>
+
+            <!-- Приемы пищи -->
+            <section class="meals">
+                <h2>Приемы пищи</h2>
+                <div class="meal-list">
+                    <!-- Завтрак -->
+                    <div class="meal-card" data-meal="breakfast">
+                        <div class="meal-header">
+                            <h3>Завтрак</h3>
+                            <span class="meal-calories">0 ккал</span>
+                        </div>
+                        <ul class="meal-items">
+                            <!-- Продукты будут добавляться сюда динамически -->
+                            <li class="empty-state">Нажмите, чтобы добавить продукт</li>
+                        </ul>
+                    </div>
+
+                    <!-- Обед -->
+                    <div class="meal-card" data-meal="lunch">
+                        <div class="meal-header">
+                            <h3>Обед</h3>
+                            <span class="meal-calories">0 ккал</span>
+                        </div>
+                        <ul class="meal-items">
+                            <li class="empty-state">Нажмите, чтобы добавить продукт</li>
+                        </ul>
+                    </div>
+
+                    <!-- Ужин -->
+                    <div class="meal-card" data-meal="dinner">
+                        <div class="meal-header">
+                            <h3>Ужин</h3>
+                            <span class="meal-calories">0 ккал</span>
+                        </div>
+                        <ul class="meal-items">
+                            <li class="empty-state">Нажмите, чтобы добавить продукт</li>
+                        </ul>
+                    </div>
+
+                    <!-- Перекус -->
+                    <div class="meal-card" data-meal="snack">
+                        <div class="meal-header">
+                            <h3>Перекус</h3>
+                            <span class="meal-calories">0 ккал</span>
+                        </div>
+                        <ul class="meal-items">
+                            <li class="empty-state">Нажмите, чтобы добавить продукт</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Окно поиска продуктов (изначально скрыто) -->
+        <div class="modal-overlay" id="searchModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Добавить продукт</h2>
+                    <button class="close-button" id="closeSearchModal">&times;</button>
+                </div>
+                <div class="search-section">
+                    <input type="text" id="productSearch" placeholder="Начните вводить название продукта...">
+                    <button id="searchButton">Найти</button>
+                </div>
+                <div class="search-results" id="searchResults">
+                    <!-- Здесь будут результаты поиска через API -->
+                    <p class="placeholder-text">Результаты поиска появятся здесь</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем скрипты -->
+    <script src="script.js"></script>
+</body>
+</html>
