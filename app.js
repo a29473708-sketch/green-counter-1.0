@@ -1,277 +1,264 @@
-// Текущее состояние приложения
-let state = {
-    currentDate: new Date(), // Текущая отображаемая дата
-    dailyTarget: {
-        calories: 2000,
-        protein: 150,
-        fat: 70,
-        carbs: 250
-    },
-    meals: {
-        breakfast: { items: [], totalCalories: 0, totalProtein: 0, totalFat: 0, totalCarbs: 0 },
-        lunch: { items: [], totalCalories: 0, totalProtein: 0, totalFat: 0, totalCarbs: 0 },
-        dinner: { items: [], totalCalories: 0, totalProtein: 0, totalFat: 0, totalCarbs: 0 },
-        snack: { items: [], totalCalories: 0, totalProtein: 0, totalFat: 0, totalCarbs: 0 }
-    },
-    selectedMeal: null // Какой прием пищи выбран для добавления продукта
-};
+// ПРОВЕРКА
+console.log('Запуск');
 
-// Элементы DOM
-const elements = {
-    currentDate: document.getElementById('currentDate'),
-    profileButton: document.getElementById('profileButton'),
-    
-    // Сводка
-    caloriesProgress: document.getElementById('caloriesProgress'),
-    consumedCalories: document.getElementById('consumedCalories'),
-    targetCalories: document.getElementById('targetCalories'),
-    consumedProtein: document.getElementById('consumedProtein'),
-    targetProtein: document.getElementById('targetProtein'),
-    consumedFat: document.getElementById('consumedFat'),
-    targetFat: document.getElementById('targetFat'),
-    consumedCarbs: document.getElementById('consumedCarbs'),
-    targetCarbs: document.getElementById('targetCarbs'),
-    
-    // Модальное окно
-    searchModal: document.getElementById('searchModal'),
-    closeSearchModal: document.getElementById('closeSearchModal'),
-    productSearch: document.getElementById('productSearch'),
-    searchButton: document.getElementById('searchButton'),
-    searchResults: document.getElementById('searchResults')
-};
+class CalorieTracker {
+    constructor() {
+        this.currentDate = new Date();
+        this.currentMeal = null;
+        this.init();
+    }
 
-// Инициализация приложения
-function initApp() {
-    updateDateDisplay();
-    renderSummary();
-    renderMeals();
-    setupEventListeners();
-    loadDataFromStorage(); // В будущем можно добавить сохранение в localStorage
-}
+    init() {
+        this.setupEventListeners();
+        this.updateDisplay();
+    }
 
-// Обновление отображения даты
-function updateDateDisplay() {
-    const options = { day: 'numeric', month: 'long', year: 'numeric' };
-    elements.currentDate.textContent = state.currentDate.toLocaleDateString('ru-RU', options);
-}
+    setupEventListeners() {
+        // Обработчики для показа/скрытия списка продуктов
+        document.querySelectorAll('.meal-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('add-product-btn')) {
+                    this.toggleMealDetails(card);
+                }
+            });
+        });
 
-// Расчет общих показателей за день
-function calculateDailyTotals() {
-    let totalCalories = 0;
-    let totalProtein = 0;
-    let totalFat = 0;
-    let totalCarbs = 0;
-    
-    Object.values(state.meals).forEach(meal => {
-        totalCalories += meal.totalCalories;
-        totalProtein += meal.totalProtein;
-        totalFat += meal.totalFat;
-        totalCarbs += meal.totalCarbs;
-    });
-    
-    return { totalCalories, totalProtein, totalFat, totalCarbs };
-}
+        // Кнопки для продуктов
+        document.querySelectorAll('.add-product-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const mealCard = e.target.closest('.meal-card');
+                this.currentMeal = mealCard.dataset.meal;
+                this.openProductModal();
+            });
+        });
 
-// Отрисовка сводки
-function renderSummary() {
-    const totals = calculateDailyTotals();
-    
-    // Обновляем цифры
-    elements.consumedCalories.textContent = totals.totalCalories;
-    elements.targetCalories.textContent = state.dailyTarget.calories;
-    elements.consumedProtein.textContent = totals.totalProtein;
-    elements.targetProtein.textContent = state.dailyTarget.protein;
-    elements.consumedFat.textContent = totals.totalFat;
-    elements.targetFat.textContent = state.dailyTarget.fat;
-    elements.consumedCarbs.textContent = totals.totalCarbs;
-    elements.targetCarbs.textContent = state.dailyTarget.carbs;
-    
-    // Обновляем прогресс-бар
-    const caloriesPercent = Math.min((totals.totalCalories / state.dailyTarget.calories) * 100, 100);
-    elements.caloriesProgress.style.width = `${caloriesPercent}%`;
-}
+        // Кнопки переключения дней
+        document.getElementById('prevDay').addEventListener('click', () => this.changeDay(-1));
+        document.getElementById('nextDay').addEventListener('click', () => this.changeDay(1));
 
-// Отрисовка приемов пищи
-function renderMeals() {
-    Object.entries(state.meals).forEach(([mealType, mealData]) => {
-        const mealCard = document.querySelector(`.meal-card[data-meal="${mealType}"]`);
-        const caloriesEl = mealCard.querySelector('.meal-calories');
-        const itemsList = mealCard.querySelector('.meal-items');
+        // Мод. окно
+        document.querySelector('.close').addEventListener('click', () => this.closeProductModal());
+        document.getElementById('addToMeal').addEventListener('click', () => this.addProductToMeal());
         
-        // Обновляем калории
-        caloriesEl.textContent = `${mealData.totalCalories} ккал`;
+        // Закрытие через внешний клик
+        window.addEventListener('click', (e) => {
+            if (e.target === document.getElementById('productModal')) {
+                this.closeProductModal();
+            }
+        });
+    }
+
+    // Раскрытие/скрытие деталей приема пищи
+    toggleMealDetails(mealCard) {
+        const mealType = mealCard.dataset.meal;
+        const detailsElement = document.getElementById(`${mealType}-details`);
+        
+        // Закрываем все другие открытые детали
+        document.querySelectorAll('.meal-details').forEach(details => {
+            if (details !== detailsElement) {
+                details.classList.remove('active');
+            }
+        });
+        
+        // Переключ текущий элемент
+        detailsElement.classList.toggle('active');
+    }
+
+    // Переключ дней
+    changeDay(direction) {
+        this.currentDate.setDate(this.currentDate.getDate() + direction);
+        this.updateDisplay();
+    }
+
+    // Формат даты
+    formatDate(date) {
+        return date.toLocaleDateString('ru-RU', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
+    // Получение данных дня
+    getDayData() {
+        const dateKey = this.currentDate.toISOString().split('T')[0];
+        const savedData = localStorage.getItem('calorieTracker');
+        const data = savedData ? JSON.parse(savedData) : { days: {} };
+        
+        if (!data.days[dateKey]) {
+            data.days[dateKey] = {
+                breakfast: [],
+                lunch: [],
+                dinner: []
+            };
+        }
+        
+        return data.days[dateKey];
+    }
+
+    // Сохранение данных дня
+    saveDayData(dayData) {
+        const dateKey = this.currentDate.toISOString().split('T')[0];
+        const savedData = localStorage.getItem('calorieTracker');
+        const data = savedData ? JSON.parse(savedData) : { days: {} };
+        
+        data.days[dateKey] = dayData;
+        localStorage.setItem('calorieTracker', JSON.stringify(data));
+    }
+
+    // Открытие мод. окна
+    openProductModal() {
+        const mealTitles = {
+            breakfast: 'завтрак',
+            lunch: 'обед', 
+            dinner: 'ужин'
+        };
+        
+        document.getElementById('currentMealTitle').textContent = mealTitles[this.currentMeal];
+        document.getElementById('productModal').style.display = 'block';
+    }
+
+    // Закрытие мод. окна
+    closeProductModal() {
+        document.getElementById('productModal').style.display = 'none';
+        this.clearForm();
+    }
+
+    // Очистка формы
+    clearForm() {
+        document.getElementById('productName').value = '';
+        document.getElementById('productKcal').value = '';
+        document.getElementById('productProtein').value = '';
+        document.getElementById('productFat').value = '';
+        document.getElementById('productCarbs').value = '';
+        document.getElementById('productWeight').value = '100';
+    }
+
+    // Добавление продукта к приему пищи
+    addProductToMeal() {
+        const name = document.getElementById('productName').value;
+        const kcal = parseInt(document.getElementById('productKcal').value);
+        const protein = parseFloat(document.getElementById('productProtein').value) || 0;
+        const fat = parseFloat(document.getElementById('productFat').value) || 0;
+        const carbs = parseFloat(document.getElementById('productCarbs').value) || 0;
+        const weight = parseInt(document.getElementById('productWeight').value);
+
+        if (!name || isNaN(kcal) || isNaN(weight)) {
+            alert('Заполните название, калории и вес продукта');
+            return;
+        }
+
+        const coefficient = weight / 100;
+        const product = {
+            name: name,
+            weight: weight,
+            kcal: Math.round(kcal * coefficient),
+            protein: Math.round(protein * coefficient * 10) / 10,
+            fat: Math.round(fat * coefficient * 10) / 10,
+            carbs: Math.round(carbs * coefficient * 10) / 10,
+            id: Date.now() // Уникальный ID для удаления
+        };
+
+        const dayData = this.getDayData();
+        dayData[this.currentMeal].push(product);
+        this.saveDayData(dayData);
+        
+        this.updateDisplay();
+        this.closeProductModal();
+    }
+
+    // Удаление продукта
+    removeProduct(mealType, productId) {
+        const dayData = this.getDayData();
+        dayData[mealType] = dayData[mealType].filter(product => product.id !== productId);
+        this.saveDayData(dayData);
+        this.updateDisplay();
+    }
+
+    // Расчет статистики для приема пищи
+    calculateMealStats(products) {
+        return products.reduce((stats, product) => ({
+            kcal: stats.kcal + product.kcal,
+            protein: stats.protein + product.protein,
+            fat: stats.fat + product.fat,
+            carbs: stats.carbs + product.carbs
+        }), { kcal: 0, protein: 0, fat: 0, carbs: 0 });
+    }
+
+    // Обновление отображения деталей приема пищи
+    updateMealDetails(mealType, products) {
+        const detailsElement = document.getElementById(`${mealType}-details`);
+        const productsList = document.getElementById(`${mealType}-products`);
+        const emptyState = document.getElementById(`${mealType}-empty`);
+        const productsCount = detailsElement.querySelector('.products-count');
+        
+        // Обновляем счетчик продуктов
+        productsCount.textContent = `${products.length} продукт(ов)`;
         
         // Очищаем список
-        itemsList.innerHTML = '';
+        productsList.innerHTML = '';
         
-        // Добавляем продукты или сообщение о пустом состоянии
-        if (mealData.items.length === 0) {
-            itemsList.innerHTML = '<li class="empty-state">Нажмите, чтобы добавить продукт</li>';
+        if (products.length === 0) {
+            emptyState.style.display = 'block';
         } else {
-            mealData.items.forEach(item => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>${item.name}</span>
-                    <span>${item.calories} ккал</span>
+            emptyState.style.display = 'none';
+            
+            // Добавляем каждый продукт в список
+            products.forEach((product) => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product-item';
+                productElement.innerHTML = `
+                    <div class="product-info">
+                        <div class="product-name">${product.name}</div>
+                        <div class="product-details">${product.weight}г • Б: ${product.protein}г • Ж: ${product.fat}г • У: ${product.carbs}г</div>
+                    </div>
+                    <div class="product-actions">
+                        <div class="product-kcal">${product.kcal} ккал</div>
+                        <button class="remove-product-btn" data-meal="${mealType}" data-product-id="${product.id}">×</button>
+                    </div>
                 `;
-                itemsList.appendChild(li);
+                productsList.appendChild(productElement);
+            });
+
+            // Добавляем обработчики для кнопок удаления
+            productsList.querySelectorAll('.remove-product-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const mealType = btn.dataset.meal;
+                    const productId = parseInt(btn.dataset.productId);
+                    this.removeProduct(mealType, productId);
+                });
             });
         }
-    });
-}
+    }
 
-// Настройка обработчиков событий
-function setupEventListeners() {
-    // Навигация по дням (свайпы)
-    let touchStartX = 0;
-    let touchEndX = 0;
-    
-    document.addEventListener('touchstart', e => {
-        touchStartX = e.changedTouches[0].screenX;
-    });
-    
-    document.addEventListener('touchend', e => {
-        touchEndX = e.changedTouches[0].screenX;
-        handleSwipe();
-    });
-    
-    // Клики по приемам пищи
-    document.querySelectorAll('.meal-card').forEach(card => {
-        card.addEventListener('click', () => {
-            const mealType = card.getAttribute('data-meal');
-            openSearchModal(mealType);
+    // Обновление всего отображения
+    updateDisplay() {
+        // Обновляем дату
+        document.getElementById('currentDate').textContent = this.formatDate(this.currentDate);
+        
+        const dayData = this.getDayData();
+
+        // Обновляем каждый прием пищи
+        ['breakfast', 'lunch', 'dinner'].forEach(meal => {
+            const products = dayData[meal];
+            const stats = this.calculateMealStats(products);
+
+            // Обновление summary (главные цифры)
+            const card = document.querySelector(`[data-meal="${meal}"]`);
+            card.querySelector('.kcal-info').textContent = `${stats.kcal} ккал`;
+            card.querySelector('.macro-info').textContent = 
+                `Б: ${stats.protein}г, Ж: ${stats.fat}г, У: ${stats.carbs}г`;
+
+            // Обновление деталей (выпадающее окно)
+            this.updateMealDetails(meal, products);
         });
-    });
-    
-    // Кнопка закрытия модального окна
-    elements.closeSearchModal.addEventListener('click', closeSearchModal);
-    
-    // Клик по оверлею для закрытия
-    elements.searchModal.addEventListener('click', (e) => {
-        if (e.target === elements.searchModal) {
-            closeSearchModal();
-        }
-    });
-    
-    // Поиск продуктов (заглушка)
-    elements.searchButton.addEventListener('click', performSearch);
-    elements.productSearch.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            performSearch();
-        }
-    });
-}
-
-// Обработка свайпов
-function handleSwipe() {
-    const swipeThreshold = 50; // Минимальная дистанция свайпа
-    const diff = touchStartX - touchEndX;
-    
-    if (Math.abs(diff) < swipeThreshold) return;
-    
-    if (diff > 0) {
-        // Свайп влево -> следующий день
-        navigateToDay(1);
-    } else {
-        // Свайп вправо -> предыдущий день
-        navigateToDay(-1);
     }
 }
 
-// Навигация по дням
-function navigateToDay(days) {
-    state.currentDate.setDate(state.currentDate.getDate() + days);
-    updateDateDisplay();
-    // Здесь будет загрузка данных для новой даты
-    loadDataForCurrentDate();
-}
 
-// Открытие модального окна поиска
-function openSearchModal(mealType) {
-    state.selectedMeal = mealType;
-    elements.searchModal.classList.add('active');
-    elements.productSearch.focus();
-}
-
-// Закрытие модального окна
-function closeSearchModal() {
-    elements.searchModal.classList.remove('active');
-    state.selectedMeal = null;
-    elements.productSearch.value = '';
-    elements.searchResults.innerHTML = '<p class="placeholder-text">Результаты поиска появятся здесь</p>';
-}
-
-// Заглушка для поиска (будет заменена на работу с API)
-function performSearch() {
-    const query = elements.productSearch.value.trim();
-    if (!query) return;
-    
-    elements.searchResults.innerHTML = '<p>Поиск... (здесь будет интеграция с FatSecret API)</p>';
-    
-    // Временная заглушка с примерными результатами
-    setTimeout(() => {
-        elements.searchResults.innerHTML = `
-            <div class="search-result-item">
-                <p><strong>${query}</strong> (пример)</p>
-                <p>100 г: 150 ккал, 10г белка, 5г жиров, 20г углеводов</p>
-                <button onclick="addProductToMeal('${query}', 150, 10, 5, 20, 100)">Добавить 100г</button>
-            </div>
-        `;
-    }, 1000);
-}
-
-// Добавление продукта в прием пищи
-function addProductToMeal(name, calories, protein, fat, carbs, quantity) {
-    if (!state.selectedMeal) return;
-    
-    const meal = state.meals[state.selectedMeal];
-    meal.items.push({
-        name,
-        calories,
-        protein,
-        fat,
-        carbs,
-        quantity
-    });
-    
-    // Пересчитываем итоги для приема пищи
-    meal.totalCalories += calories;
-    meal.totalProtein += protein;
-    meal.totalFat += fat;
-    meal.totalCarbs += carbs;
-    
-    // Обновляем интерфейс
-    renderSummary();
-    renderMeals();
-    
-    // Закрываем модальное окно
-    closeSearchModal();
-    
-    // Здесь можно добавить сохранение в localStorage
-}
-
-// Загрузка данных для текущей даты (заглушка)
-function loadDataForCurrentDate() {
-    // В реальном приложении здесь будет загрузка из базы данных или localStorage
-    console.log('Загрузка данных для:', state.currentDate);
-    
-    // Сброс к пустым данным для демонстрации
-    Object.values(state.meals).forEach(meal => {
-        meal.items = [];
-        meal.totalCalories = 0;
-        meal.totalProtein = 0;
-        meal.totalFat = 0;
-        meal.totalCarbs = 0;
-    });
-    
-    renderSummary();
-    renderMeals();
-}
-
-// Загрузка данных из хранилища (заглушка)
-function loadDataFromStorage() {
-    // В будущем можно реализовать сохранение в localStorage
-}
-
-// Инициализация приложения после загрузки DOM
-document.addEventListener('DOMContentLoaded', initApp);
+// Запускаем приложение когда страница загрузится
+document.addEventListener('DOMContentLoaded', function() {
+    new CalorieTracker();
+});
