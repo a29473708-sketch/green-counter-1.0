@@ -8,16 +8,37 @@
 </head>
 <body>
     <div class="container">
-        <!-- Дата -->
         <header class="date-header">
             <button id="prevDay">←</button>
             <h1 id="currentDate">Сегодня</h1>
             <button id="nextDay">→</button>
         </header>
-
-        <!-- Блоки -->
+<div class="daily-stats">
+    <h3>Дневная статистика</h3>
+    
+    <div class="stats-item">
+        <div class="stats-label">Калории</div>
+        <div class="stats-value" id="dailyCalories">0 ккал</div>
+    </div>
+    
+    <div class="stats-item">
+        <div class="stats-label">Белки</div>
+        <div class="stats-value" id="dailyProtein">0 г</div>
+    </div>
+    
+    <div class="stats-item">
+        <div class="stats-label">Жиры</div>
+        <div class="stats-value" id="dailyFat">0 г</div>
+    </div>
+    
+    <div class="stats-item">
+        <div class="stats-label">Углеводы</div>
+        <div class="stats-value" id="dailyCarbs">0 г</div>
+    </div>
+</div>
+    
         <div class="meal-section">
-            <!-- Завтрак -->
+        
             <div class="meal-card" data-meal="breakfast">
                 <div class="meal-header">
                     <h3>Завтрак</h3>
@@ -28,20 +49,20 @@
                     <div class="macro-info">Б: 0г, Ж: 0г, У: 0г</div>
                 </div>
                 
-                <!-- Окно -->
+            
                 <div class="meal-details" id="breakfast-details">
                     <div class="products-header">
                         <h4>Список продуктов</h4>
                         <span class="products-count">0 продуктов</span>
                     </div>
                     <div class="products-list" id="breakfast-products">
-                        <!-- Динамическое добавление -->
+                     
                     </div>
                     <div class="empty-state" id="breakfast-empty">Продукты еще не добавлены</div>
                 </div>
             </div>
 
-            <!-- Обед -->
+        
             <div class="meal-card" data-meal="lunch">
                 <div class="meal-header">
                     <h3>Обед</h3>
@@ -62,7 +83,6 @@
                 </div>
             </div>
 
-            <!-- Ужин -->
             <div class="meal-card" data-meal="dinner">
                 <div class="meal-header">
                     <h3>Ужин</h3>
@@ -85,7 +105,6 @@
         </div>
     </div>
 
-    <!-- Модальное окно для добавления продукта -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
