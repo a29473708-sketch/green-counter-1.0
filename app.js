@@ -245,20 +245,19 @@ class CalorieTracker {
             const products = dayData[meal];
             const stats = this.calculateMealStats(products);
 
-            // Обновление summary (главные цифры)
+            // Обновление глав цифры
             const card = document.querySelector(`[data-meal="${meal}"]`);
             card.querySelector('.kcal-info').textContent = `${stats.kcal} ккал`;
             card.querySelector('.macro-info').textContent = 
                 `Б: ${stats.protein}г, Ж: ${stats.fat}г, У: ${stats.carbs}г`;
 
-            // Обновление деталей (выпадающее окно)
+            // Обновление(выпадающее окно)
             this.updateMealDetails(meal, products);
         });
     }
 }
 
-
-// Запускаем приложение когда страница загрузится
 document.addEventListener('DOMContentLoaded', function() {
     new CalorieTracker();
 });
+
